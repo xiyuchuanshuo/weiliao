@@ -1,0 +1,16 @@
+<resources>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="chat_bg_margin_frame">60dip</dimen>
+    <dimen name="chat_bg_margin_img">5dip</dimen>
+    <dimen name="chat_txt_size">18sp</dimen>
+    <dimen name="file_img_margin">10dp</dimen>
+    <dimen name="file_name_size">18sp</dimen>
+    <dimen name="file_img_width">45dp</dimen>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="magin_right">100dp</dimen>
+    <dimen name="leftViewWidth">200dp</dimen>
+    <dimen name="rightViewWidth">200dp</dimen>
+    <dimen name="chat_file_img_width">60dp</dimen>
+</resources>

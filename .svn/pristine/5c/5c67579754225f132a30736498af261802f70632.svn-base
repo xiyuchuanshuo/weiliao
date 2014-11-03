@@ -1,0 +1,225 @@
+package com.b509.xiaoliao.map;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.Path;
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.Toast;
+
+import com.baidu.mapapi.GeoPoint;
+import com.baidu.mapapi.ItemizedOverlay;
+import com.baidu.mapapi.MKSearch;
+import com.baidu.mapapi.MapView;
+import com.baidu.mapapi.OverlayItem;
+import com.baidu.mapapi.Projection;
+
+public class LocusOverlayT extends ItemizedOverlay<OverlayItem> {
+    
+    private Context context;
+    
+    private MapView mapView;
+    
+    private MKSearch mkSearch;
+    
+    private View popupView;
+    
+    private Drawable marker;
+    
+    public List<OverlayItem> mGeoList = new ArrayList<OverlayItem>();
+    
+    private double mLat1 = 22.30923; // point1纬度
+    
+    private double mLon1 = 113.557428; // point1经度
+    
+    private double mLat2 = 22.30923;
+    
+    private double mLon2 = 113.597428;
+    
+    private double mLat3 = 22.27833;
+    
+    private double mLon3 = 113.627428;
+    
+    /**
+     * [构造简要说明]
+     * @param arg0
+     */
+    public LocusOverlayT(Context context,MapView mapView,View popupView,Drawable marker,MKSearch mkSearch) {
+        super(boundCenterBottom(marker));
+        this.context = context;
+        this.marker = marker;
+        this.popupView = popupView;
+        this.mapView = mapView;
+        this.mkSearch = mkSearch;
+        
+        // 用给定的经纬度构造GeoPoint，单位是微度 (度 * 1E6)
+        GeoPoint p1 = new GeoPoint((int) (mLat1 * 1E6), (int) (mLon1 * 1E6));
+        GeoPoint p2 = new GeoPoint((int) (mLat2 * 1E6), (int) (mLon2 * 1E6));
+        
+        GeoPoint p3 = new GeoPoint((int) (mLat3 * 1E6), (int) (mLon3 * 1E6));
+        
+        // 构造OverlayItem的三个参数依次为：item的位置，标题文本，文字片段
+        mGeoList.add(new OverlayItem(p1, "P1", "point1"));
+        mGeoList.add(new OverlayItem(p2, "P2", "point2"));
+        mGeoList.add(new OverlayItem(p3, "P3", "point3"));
+        //createItem(int)方法构造item。一旦有了数据，在调用其它方法前，首先调用这个方法
+        populate();
+    }
+    
+    /**
+     * 重写Draw方法实现对路径重画<BR>
+     * [功能详细描述]
+     * @param canvas 画笔对象
+     * @param mapView
+     * @param shadow 是否需要阴影
+     * @see com.baidu.mapapi.ItemizedOverlay#draw(android.graphics.Canvas, com.baidu.mapapi.MapView, boolean)
+     */
+    @Override
+    public void draw(Canvas canvas, MapView mapView, boolean shadow) {
+        
+        // Projection接口用于屏幕像素坐标和经纬度坐标之间的变换
+        Projection projection = mapView.getProjection();
+        //第一个画笔 画圆  
+        Paint fillPaint = new Paint();
+        fillPaint.setColor(Color.RED);
+        fillPaint.setAntiAlias(true);
+        fillPaint.setStyle(Style.FILL);
+        
+        //第二个画笔 画线  
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(4);
+        // 连接 所有点
+        Path path = new Path();
+        // 遍历mGeoList
+        for (int i = 0; i < size(); i++) {
+            OverlayItem overLayItem = getItem(i); // 得到给定索引的item
+            //String title = overLayItem.getTitle();
+            // 把经纬度变换到相对于MapView左上角的屏幕像素坐标
+            Point point = projection.toPixels(overLayItem.getPoint(), null);
+            // 可在此处添加您的绘制代码
+            Paint paintText = new Paint();
+            paintText.setColor(Color.BLACK);
+            paintText.setTextSize(15);
+            // 绘制文本
+            //canvas.drawText(title, point.x - 30, point.y, paintText); 
+            // 绘制圆圈
+            canvas.drawCircle(point.x, point.y, 5.0f, fillPaint);
+            if (i == 0) {
+                path.moveTo(point.x, point.y);
+            } else {
+                path.lineTo(point.x, point.y);
+            }
+        }
+        // 画出路径
+        canvas.drawPath(path, paint);
+        //super.draw(canvas, mapView, shadow);
+        // 调整一个drawable边界，使得（0，0）是这个drawable底部最后一行中心的一个像素
+        boundCenterBottom(marker);
+    }
+    
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param arg0
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#createItem(int)
+     */
+    @Override
+    protected OverlayItem createItem(int i) {
+        return mGeoList.get(i);
+    }
+    
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#size()
+     */
+    @Override
+    public int size() {
+        return mGeoList.size();
+    }
+    
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param arg0
+     * @param arg1
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#onTap(com.baidu.mapapi.GeoPoint, com.baidu.mapapi.MapView)
+     */
+    @Override
+    public boolean onTap(GeoPoint geoPoint, MapView mapView) {
+        if(popupView.getVisibility() == View.VISIBLE){
+            popupView.setVisibility(View.GONE);
+        }else {
+/*            Canvas canvas = new Canvas();
+            Logger.e(".>>>", "HUIZHI");
+            //第一个画笔 画圆  
+            Paint fillPaint = new Paint();
+            fillPaint.setColor(Color.RED);
+            fillPaint.setAntiAlias(true);
+            fillPaint.setStyle(Style.FILL);
+            // Projection接口用于屏幕像素坐标和经纬度坐标之间的变换
+            Projection projection = mapView.getProjection();
+            // 把经纬度变换到相对于MapView左上角的屏幕像素坐标
+            Point point = projection.toPixels(geoPoint, null);
+            Logger.e("Point", "X:"+point.x  +"Y"+point.y);
+            canvas.drawCircle(point.x, point.y, 5.0f, fillPaint); 
+            mGeoList.add(new OverlayItem(geoPoint, "P4", "point4"));
+            */
+        }
+        return super.onTap(geoPoint, mapView);
+    }
+    
+    
+    
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param postion 标示点击点位置
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#onTap(int)
+     */
+    @Override
+    protected boolean onTap(int postion) {
+        setFocus(mGeoList.get(postion));
+        mapView.updateViewLayout(popupView,
+                new MapView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT,
+                        mGeoList.get(postion).getPoint(), MapView.LayoutParams.BOTTOM_CENTER));
+        popupView.setVisibility(View.VISIBLE);
+        Toast.makeText(this.context,
+                mGeoList.get(postion).getSnippet(),
+                Toast.LENGTH_SHORT).show();
+        mapView.getController().animateTo(mGeoList.get(postion).getPoint());
+        mkSearch.reverseGeocode(mGeoList.get(postion).getPoint());
+        return true;
+    }
+
+    /**
+     * @return the mGeoList
+     */
+    public List<OverlayItem> getmGeoList() {
+        return mGeoList;
+    }
+
+    /**
+     * @param mGeoList the mGeoList to set
+     */
+    public void setmGeoList(List<OverlayItem> mGeoList) {
+        this.mGeoList = mGeoList;
+    }
+}

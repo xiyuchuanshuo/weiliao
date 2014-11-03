@@ -1,0 +1,68 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_left"
+    android:layout_width="230dp"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/grey21"
+        android:padding="10dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="个人设置"
+            android:textColor="@color/gold"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/touxiang"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/choose1" />
+
+    <LinearLayout
+        android:layout_marginLeft="2dp"
+        android:layout_marginBottom="20dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <EditText
+            android:id="@+id/et_name"
+            android:layout_weight="2"
+            android:layout_width="50dp"
+            android:singleLine="true"
+            android:layout_height="wrap_content" 
+            />
+        <Button 
+            android:id="@+id/bt_name"
+            android:layout_weight="1"
+            android:layout_width="30dp"
+            android:text="修改"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    
+    
+    
+    <com.b509.xiaoliao.view.COFixListViewBugLinearLayout
+        android:id="@+id/wifi"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1" >
+
+        <ListView
+            android:id="@+id/lvLeft"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+        </ListView>
+    </com.b509.xiaoliao.view.COFixListViewBugLinearLayout>
+   
+
+</LinearLayout>

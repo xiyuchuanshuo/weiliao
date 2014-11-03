@@ -1,0 +1,13 @@
+package com.b509.xiaoliao.map;
+public interface DistanceListener {
+    
+    /**
+     * 返回测距后的距离总和<BR>
+     * [功能详细描述]
+     * @param result
+     */
+    void onDistanceResult(double result);
+    
+    
+    
+}

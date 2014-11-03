@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/Layout_MapFrame_RelativeLayout01"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+
+ <ImageButton
+        android:id="@+id/ImageButtonMyloc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:background="@android:color/transparent"
+        android:paddingRight="4.0dip"
+        android:src="@drawable/btn_map_loc" />
+
+    <ImageButton
+        android:id="@+id/ImageButtonAR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/ImageButtonMyloc"
+        android:background="@android:color/transparent"
+        android:paddingRight="4.0dip"
+        android:src="@drawable/btn_map_ar" />
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="7.0dip"
+        android:paddingRight="2.0dip" >
+
+        <ImageButton
+            android:id="@+id/ImageButtonZoomUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="3.0dip"
+            android:background="@android:color/transparent"
+            android:src="@drawable/btn_zoom_up" />
+
+        <ImageButton
+            android:id="@+id/ImageButtonZoomDown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="3.0dip"
+            android:layout_toLeftOf="@id/ImageButtonZoomUp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/btn_zoom_down" />
+
+        <Button
+            android:id="@+id/ButtonZoomStreet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/ImageButtonZoomUp"
+            android:layout_alignLeft="@id/ImageButtonZoomUp"
+            android:background="@drawable/zoom_popup_button"
+            android:text="街道"
+            android:textColor="#ff000000"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/ButtonZoomCity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/ImageButtonZoomDown"
+            android:layout_alignRight="@id/ImageButtonZoomDown"
+            android:background="@drawable/zoom_popup_button"
+            android:text="全城"
+            android:textColor="#ff000000"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+</RelativeLayout>

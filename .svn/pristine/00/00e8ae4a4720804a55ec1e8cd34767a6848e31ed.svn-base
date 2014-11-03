@@ -1,0 +1,277 @@
+package com.b509.xiaoliao;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+
+import org.apache.http.conn.util.InetAddressUtils;
+
+import android.app.Application;
+import android.content.Context;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.os.Debug;
+import android.os.Environment;
+import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.WindowManager;
+import android.widget.Toast;
+
+import com.b509.xiaoliao.model.UDPMessage;
+import com.b509.xiaoliao.util.FileUtil;
+import com.baidu.mapapi.BMapManager;
+import com.baidu.mapapi.MKEvent;
+import com.baidu.mapapi.MKGeneralListener;
+
+public class MyApplication extends Application{
+	
+	private String localIp;
+	public static int width, height;
+	private  String deviceCode;
+	private String filePath;
+	
+	private final String dir="xiaoliao"+File.separator;
+	
+	public static MyApplication mainInstance;
+	public static String iconPath;
+	
+	 /**
+     * SDK版本号
+     */
+    private static int sdkVersion;
+    
+    /**
+     * 百度MapAPI的管理类
+     */
+    public BMapManager mMapManager = null;
+    
+    /**
+     * 百度地图KEY
+     */
+    public String mapKey = "333C0A15D54AC6775A0646E1980CABE6B7096029";
+    
+    boolean m_bKeyRight = true; // 授权Key正确，验证通过
+	
+	
+	
+	
+	
+	
+	@Override
+	public void onCreate() {
+	  super.onCreate();
+	//  Debug.startMethodTracing("my");
+	  
+	  localIp=getLocalIpAddress();
+	  mainInstance=this;
+     DisplayMetrics dm = new DisplayMetrics();
+     WindowManager manager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+	 manager.getDefaultDisplay().getMetrics(dm);
+ 	// 获得屏幕的高宽（用来适配分辨率）
+	 width = dm.widthPixels;
+	 height = dm.heightPixels;
+	 
+	 iconPath=getFilesDir()+File.separator;
+	 getDeviceId();
+	 clearIcon();
+	 CrashHandler crashHandler=CrashHandler.getInstance();
+	 crashHandler.init(getApplicationContext());
+	 
+	 Debug.stopMethodTracing();
+	 
+	 
+	 mMapManager = new BMapManager(this);
+     mMapManager.init(this.mapKey, new MyGeneralListener());
+     mMapManager.getLocationManager().setNotifyInternal(10, 5);
+	}
+	
+	/**
+	 * 获取设备唯一标识
+	 */
+	private void getDeviceId(){
+		 TelephonyManager telephonyManager=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+//		 String imsi=telephonyManager.getSubscriberId();
+		 deviceCode=telephonyManager.getDeviceId();
+		 Log.d("=============", "DeviceId  :"+deviceCode);
+		 if(deviceCode==null){
+			 WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE); 
+			 WifiInfo info = wifi.getConnectionInfo(); 
+			 deviceCode=info.getMacAddress();  
+		 }
+		 if(deviceCode==null){
+			 deviceCode=getSharedPreferences("me", 0).getString("deviceCode", System.currentTimeMillis()+"");
+			 getSharedPreferences("me", 0).edit().putString("deviceCode", deviceCode).commit();
+		 }
+	}
+	
+	/**
+	 * 创建应用目录
+	 */
+	public void createDir(){
+		if(hasSDcard()){
+	 		filePath=Environment.getExternalStorageDirectory().getPath()+File.separator+dir;
+	 		File file=new File(filePath);
+			if(!file.exists()) file.mkdir();
+	 	}
+	}
+	
+	
+	/**
+	 * 清理保存的头像图片
+	 */
+	private void clearIcon(){
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				File file=getFilesDir();
+				if(file.exists()){
+					File[] childsFiles=file.listFiles();
+					int length=childsFiles.length;
+					if(childsFiles!=null&&length>200){//保存200张头像
+						int count=0;
+						for(File child:childsFiles){
+							FileUtil.delete(child);
+							count++;
+							if(count>20)
+								break;
+						}
+					}
+				}
+			}
+		}).start();
+	}
+	
+	
+	
+	
+	public UDPMessage getMyUdpMessage(String msg,int type){
+		UDPMessage message=new UDPMessage();
+		message.setType(type);
+		message.setSenderName(getMyName());
+		message.setMsg(msg);
+		message.setDeviceCode(deviceCode);
+		message.setOwn(true);
+		return message;
+	}
+	
+	
+	/**
+	 * 得到本机IP地址
+	 * @return
+	 */
+		public String getLocalIpAddress(){
+			try{
+				//获得当前可用的wifi网络
+				Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); 
+				while(en.hasMoreElements()){
+					NetworkInterface nif = en.nextElement();
+					Enumeration<InetAddress> enumIpAddr = nif.getInetAddresses();
+					while(enumIpAddr.hasMoreElements()){
+						InetAddress mInetAddress = enumIpAddr.nextElement();
+						if(!mInetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(mInetAddress.getHostAddress())){
+							return mInetAddress.getHostAddress();
+						}
+					}
+				}
+			}catch(SocketException e){
+				e.printStackTrace();
+				Toast.makeText(this, "获取本机IP地址失败", Toast.LENGTH_SHORT).show();
+			}
+			return null;
+		}
+		
+		public static boolean hasSDcard() {
+			  return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()); 
+		  }
+
+		public String getLocalIp() {
+			if(localIp==null)
+				localIp=getLocalIpAddress();
+			return localIp;
+		}
+		public void setLocalIp(String localIp) {
+			this.localIp = localIp;
+		}
+
+		public String getDeviceCode() {
+			return deviceCode;
+		}
+		public void setDeviceCode(String deviceCode) {
+			this.deviceCode = deviceCode;
+		}
+
+		public String getMyName() {
+			String s = getSharedPreferences("me", 0).getString("name", "新手");
+			System.out.println("s ======"+s);
+			return s;
+		}
+
+		public String getFilePath() {
+			return filePath;
+		}
+
+		public void setFilePath(String filePath) {
+			this.filePath = filePath;
+		}
+		
+		/**
+	     * 常用事件监听，用来处理通常的网络错误，授权验证错误等<BR>
+	     */
+	    public static class MyGeneralListener implements MKGeneralListener {
+	        @Override
+	        public void onGetNetworkState(int iError) {
+	            Log.d("MyGeneralListener", "onGetNetworkState error is " + iError);
+	            Toast.makeText(MyApplication.mainInstance.getApplicationContext(),
+	                    "您的网络出错啦！",
+	                    Toast.LENGTH_LONG).show();
+	        }
+	        
+	        @Override
+	        public void onGetPermissionState(int iError) {
+	            Log.d("MyGeneralListener", "onGetPermissionState error is "
+	                    + iError);
+	            if (iError == MKEvent.ERROR_PERMISSION_DENIED) {
+	                // 授权Key错误：
+	                Toast.makeText(MyApplication.mainInstance.getApplicationContext(),
+	                        "请在BMapApiDemoApp.java文件输入正确的授权Key！",
+	                        Toast.LENGTH_LONG).show();
+	                MyApplication.mainInstance.m_bKeyRight = false;
+	            }
+	        }
+	    }
+	    
+	    public static MyApplication getContext() {
+	        return mainInstance;
+	    }
+	    
+	    /**
+	     * 获得版本号<BR>
+	     * [功能详细描述]
+	     * @return SDK版本号
+	     */
+	    public static int getSDKVersion() {
+	        if (MyApplication.sdkVersion == 0) {
+	        	MyApplication.sdkVersion = Integer.parseInt(Build.VERSION.SDK);
+	        }
+	        return MyApplication.sdkVersion;
+	    }
+	    
+	    @Override
+	    /**
+	     * 建议在您app的退出之前调用mapadpi的destroy()函数，避免重复初始化带来的时间消耗<BR>
+	     * [功能详细描述]
+	     * @see android.app.Application#onTerminate()
+	     */
+	    public void onTerminate() {
+	        if (mMapManager != null) {
+	            mMapManager.destroy();
+	            mMapManager = null;
+	        }
+	        super.onTerminate();
+	    }
+		
+}

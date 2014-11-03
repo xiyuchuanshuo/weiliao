@@ -1,0 +1,130 @@
+package com.b509.xiaoliao.map;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.widget.Toast;
+
+import com.baidu.mapapi.GeoPoint;
+import com.baidu.mapapi.ItemizedOverlay;
+import com.baidu.mapapi.MapView;
+import com.baidu.mapapi.OverlayItem;
+import com.baidu.mapapi.Projection;
+
+
+public class MarkOverlayT extends ItemizedOverlay<OverlayItem>{
+    
+    private Drawable marker;
+    
+    /**
+     * 标记List
+     */
+    private List<OverlayItem> markList;
+    
+    private Projection projection;
+    
+    private Context context;
+    
+    /**
+     * [构造简要说明]
+     * @param arg0
+     */
+    public MarkOverlayT(Drawable marker) {
+        super(marker);
+        this.marker = marker;
+        markList = new ArrayList<OverlayItem>();
+        populate();
+    }
+
+    
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param canvas
+     * @param mapView
+     * @param shadow
+     * @see com.baidu.mapapi.ItemizedOverlay#draw(android.graphics.Canvas, com.baidu.mapapi.MapView, boolean)
+     */
+    
+    @Override
+    public void draw(Canvas canvas, MapView mapView, boolean shadow) {
+        //super.draw(canvas, mapView, shadow);
+        // Projection接口用于屏幕像素坐标和经纬度坐标之间的变换
+        projection = mapView.getProjection();
+        //第一个画笔 画圆  
+        Paint fillPaint = new Paint();
+        fillPaint.setColor(Color.RED);
+        fillPaint.setAntiAlias(true);
+        fillPaint.setStyle(Style.FILL);
+        
+        for (int i = 0; i < size(); i++) {
+            OverlayItem overLayItem = getItem(i); // 得到给定索引的item
+            // 把经纬度变换到相对于MapView左上角的屏幕像素坐标
+            Point point = projection.toPixels(overLayItem.getPoint(), null);
+            // 绘制圆圈
+            canvas.drawCircle(point.x, point.y, 5.0f, fillPaint);
+        }
+        boundCenterBottom(marker);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param geoPoint
+     * @param mapView
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#onTap(com.baidu.mapapi.GeoPoint, com.baidu.mapapi.MapView)
+     */
+    @Override
+    public boolean onTap(GeoPoint geoPoint, MapView mapView) {
+        OverlayItem item = new OverlayItem(geoPoint, "", "");
+        markList.add(item);
+        populate();
+        return super.onTap(geoPoint, mapView);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param position
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#onTap(int)
+     */
+    @Override
+    protected boolean onTap(int position) {
+        GeoPoint geoPoint = markList.get(position).getPoint();
+        Toast.makeText(context, "Latitude:"+geoPoint.getLatitudeE6()/1e6  +"Longitude:" +geoPoint.getLongitudeE6()/1e6, Toast.LENGTH_LONG).show();
+        return super.onTap(position);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param position
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#createItem(int)
+     */
+    @Override
+    protected OverlayItem createItem(int position) {
+        return markList.get(position);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#size()
+     */
+    @Override
+    public int size() {
+        return markList.size();
+    }
+    
+}

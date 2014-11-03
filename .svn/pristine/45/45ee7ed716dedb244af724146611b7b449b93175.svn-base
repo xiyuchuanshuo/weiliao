@@ -1,0 +1,68 @@
+package com.b509.xiaoliao.map;
+
+import android.content.Context;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+
+import com.baidu.mapapi.GeoPoint;
+import com.baidu.mapapi.MapView;
+import com.baidu.mapapi.MyLocationOverlay;
+
+public class MeLocationOverlay extends MyLocationOverlay{
+    
+    //private Context context;
+    
+    private View popupView;
+    
+    private MapView mapView;
+
+    /**
+     * [构造简要说明]
+     * @param arg0
+     * @param arg1  
+     */
+    public MeLocationOverlay(Context context, MapView mapView,View popupView) {
+        super(context, mapView);
+        //this.context = context;
+        this.mapView = mapView;
+        this.popupView = popupView;
+    }
+
+//    /**
+//     *  点击地图任意位置触发(除自己当前位置)<BR>
+//     * [功能详细描述]
+//     * @param geoPoint
+//     * @param mapView
+//     * @return
+//     * @see com.baidu.mapapi.MyLocationOverlay#onTap(com.baidu.mapapi.GeoPoint, com.baidu.mapapi.MapView)
+//     */
+//    @Override
+//    public boolean onTap(GeoPoint geoPoint, MapView mapView) {
+//       popupView.setVisibility(View.GONE);
+//      return super.onTap(geoPoint, mapView);
+//    }
+
+//    /**
+//     * 当用户点击自己所在位置时触发<BR>
+//     * [功能详细描述]
+//     * @return
+//     * @see com.baidu.mapapi.MyLocationOverlay#dispatchTap()
+//     */
+//    @Override
+//    protected boolean dispatchTap() {
+//        if(popupView.getVisibility() == View.GONE){
+//            mapView.updateViewLayout( popupView,
+//                    new MapView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT,
+//                            getMyLocation(), MapView.LayoutParams.BOTTOM_CENTER));
+//            popupView.setVisibility(View.VISIBLE);
+//        }else {
+//            popupView.setVisibility(View.GONE);
+//        }
+//        mapView.getController().animateTo(getMyLocation());
+//        return true;
+//    }
+
+    
+    
+    
+}

@@ -1,0 +1,37 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/begin_bg" >
+
+    <ImageButton
+        android:id="@+id/choose_establish"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/choose_begin"
+        android:layout_alignTop="@+id/choose_search"
+        android:layout_marginTop="26dp"
+        android:background="#00000000"
+        android:src="@drawable/choose2" />
+
+    <ImageButton
+        android:id="@+id/choose_begin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/choose_search"
+        android:background="#00000000"
+        android:src="@drawable/choose1" />
+
+    <ImageButton
+        android:id="@+id/choose_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="21dp"
+        android:layout_marginTop="177dp"
+        android:layout_toRightOf="@+id/choose_establish"
+        android:background="#00000000"
+        android:src="@drawable/choose3" />
+
+</RelativeLayout>

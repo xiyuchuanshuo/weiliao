@@ -1,0 +1,221 @@
+package com.b509.xiaoliao.map;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.Path;
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.widget.Toast;
+
+import com.baidu.mapapi.GeoPoint;
+import com.baidu.mapapi.ItemizedOverlay;
+import com.baidu.mapapi.MapView;
+import com.baidu.mapapi.OverlayItem;
+import com.baidu.mapapi.Projection;
+
+
+public class DistanceOverlayT extends ItemizedOverlay<OverlayItem>{
+    
+    /**
+     * 标记List
+     */
+    private List<OverlayItem> markList;
+    
+    /**
+     * 屏幕像素转换
+     */
+    private Projection projection;
+    
+    /**
+     * 上下文对象
+     */
+    private Context context;
+    
+    /**
+     * 连线
+     */
+    private Path path;
+    
+    private Drawable marker;
+    
+    /**
+     * 距离统计回调listener
+     */
+    private DistanceListener distanceListener;
+    
+    /**
+     * 地球半径
+     */
+    private double EARTH_RADIUS = 6378.137;
+
+    /**
+     * [构造简要说明]
+     * @param arg0
+     */
+    public DistanceOverlayT(Context context,Drawable marker,DistanceListener distanceListener) {
+        super(marker);
+        this.context = context;
+        this.marker = marker;
+        this.distanceListener = distanceListener;
+        markList = new ArrayList<OverlayItem>();
+        populate();
+    }
+    
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param canvas
+     * @param mapView
+     * @param shadow
+     * @see com.baidu.mapapi.ItemizedOverlay#draw(android.graphics.Canvas, com.baidu.mapapi.MapView, boolean)
+     */
+    @Override
+    public void draw(Canvas canvas, MapView mapView, boolean shadow) {
+        //super.draw(canvas, mapView, shadow);
+        // Projection接口用于屏幕像素坐标和经纬度坐标之间的变换
+        projection = mapView.getProjection();
+        //第一个画笔 画圆  
+        Paint fillPaint = new Paint();
+        fillPaint.setColor(Color.RED);
+        fillPaint.setAntiAlias(true);
+        fillPaint.setStyle(Style.FILL);
+        
+        //第二个画笔 画线  
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(4);
+        
+        // 连接 所有点
+        path = new Path();
+        
+        for (int i = 0; i < size(); i++) {
+            OverlayItem overLayItem = getItem(i); // 得到给定索引的item
+            // 把经纬度变换到相对于MapView左上角的屏幕像素坐标
+            Point point = projection.toPixels(overLayItem.getPoint(), null);
+            // 绘制圆圈
+            canvas.drawCircle(point.x, point.y, 5.0f, fillPaint);
+            if (i == 0) {
+                path.moveTo(point.x, point.y);
+            } else {
+                path.lineTo(point.x, point.y);
+            }
+            // 画出路径
+            canvas.drawPath(path, paint);
+        }
+        boundCenterBottom(marker);
+        
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param geoPoint
+     * @param mapView
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#onTap(com.baidu.mapapi.GeoPoint, com.baidu.mapapi.MapView)
+     */
+    @Override
+    public boolean onTap(GeoPoint geoPoint, MapView mapView) {
+        OverlayItem item = new OverlayItem(geoPoint, "", "");
+        markList.add(item);
+        calculateDistance();
+        populate();
+        return super.onTap(geoPoint, mapView);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param position
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#onTap(int)
+     */
+    @Override
+    protected boolean onTap(int position) {
+        GeoPoint geoPoint = markList.get(position).getPoint();
+        Toast.makeText(context, "Latitude:"+geoPoint.getLatitudeE6()/1e6  +"Longitude:" +geoPoint.getLongitudeE6()/1e6, Toast.LENGTH_LONG).show();
+        return super.onTap(position);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @param position
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#createItem(int)
+     */
+    @Override
+    protected OverlayItem createItem(int position) {
+        return markList.get(position);
+    }
+
+    /**
+     * [一句话功能简述]<BR>
+     * [功能详细描述]
+     * @return
+     * @see com.baidu.mapapi.ItemizedOverlay#size()
+     */
+    @Override
+    public int size() {
+        return markList.size();
+    }
+    
+    /**
+     * 计算总距离<BR>
+     * [功能详细描述]
+     */
+    public void calculateDistance(){
+        double result = 0.0;
+        if(markList.size()>=2){
+            for (int i = 1; i < markList.size(); i++) {
+                double distance = 0.0;
+                GeoPoint geoPoint1 = markList.get(i-1).getPoint();
+                GeoPoint geoPoint2 = markList.get(i).getPoint();
+                double lat1 = geoPoint1.getLatitudeE6()/1e6;
+                double lat2 = geoPoint2.getLatitudeE6()/1e6;
+                double lon1 = geoPoint1.getLongitudeE6()/1e6;
+                double lon2 = geoPoint2.getLongitudeE6()/1e6;
+                double dLat = (lat2 - lat1) * Math.PI / 180; 
+                double dLon = (lon2 - lon1) * Math.PI / 180; 
+                double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) 
+                        + Math.cos(lat1 * Math.PI / 180) 
+                        * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) 
+                        * Math.sin(dLon / 2); 
+                distance = (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) * EARTH_RADIUS; 
+                result += distance; 
+            }
+        }
+        distanceListener.onDistanceResult(result);
+    }
+    
+    /**
+     * 清除最后一个标记点<BR>
+     * [功能详细描述]
+     */
+    public void clearLatsMark(){
+        if(markList.size() > 0){
+            markList.remove(markList.size()-1);
+            calculateDistance();
+        }
+    }
+    
+    /**
+     * 清除所有标记点<BR>
+     * [功能详细描述]
+     */
+    public void clearAllMark(){
+        markList.clear();
+        calculateDistance();
+    }
+    
+}

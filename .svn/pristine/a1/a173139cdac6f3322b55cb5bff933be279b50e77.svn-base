@@ -1,0 +1,51 @@
+package com.b509.xiaoliao;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.TranslateAnimation;
+import android.widget.ImageView;
+
+public class Welcome extends mActivity {
+
+	
+	private ImageView first;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_welcome);
+
+		first = (ImageView) findViewById(R.id.wel_bg);
+		
+		
+		Animation animation = new TranslateAnimation(0,
+				0, 0, 0);
+		animation.setDuration(2000);
+
+		first.startAnimation(animation);
+		
+		animation.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				Intent intent = new Intent();
+				intent.setClass(Welcome.this, ChooseActivity.class);
+				startActivity(intent);
+				finish();
+			}
+		});
+	}
+}

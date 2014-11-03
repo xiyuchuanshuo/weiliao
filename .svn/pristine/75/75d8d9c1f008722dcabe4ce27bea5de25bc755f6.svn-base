@@ -1,0 +1,389 @@
+package com.b509.xiaoliao;
+
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.location.Location;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
+import android.widget.Toast;
+
+import com.b509.xiaoliao.map.MeLocationOverlay;
+import com.b509.xiaoliao.util.ImageUtil;
+import com.baidu.mapapi.BMapManager;
+import com.baidu.mapapi.GeoPoint;
+import com.baidu.mapapi.LocationListener;
+import com.baidu.mapapi.MKAddrInfo;
+import com.baidu.mapapi.MKBusLineResult;
+import com.baidu.mapapi.MKDrivingRouteResult;
+import com.baidu.mapapi.MKLocationManager;
+import com.baidu.mapapi.MKOfflineMapListener;
+import com.baidu.mapapi.MKPoiResult;
+import com.baidu.mapapi.MKSearch;
+import com.baidu.mapapi.MKSearchListener;
+import com.baidu.mapapi.MKTransitRouteResult;
+import com.baidu.mapapi.MKWalkingRouteResult;
+import com.baidu.mapapi.MapActivity;
+import com.baidu.mapapi.MapController;
+import com.baidu.mapapi.MapView;
+import com.baidu.mapapi.MyLocationOverlay;
+import com.baidu.mapapi.TransitOverlay;
+
+public class BaiduMapActivity extends MapActivity implements OnClickListener,
+		LocationListener, MKSearchListener, MKOfflineMapListener {
+
+
+	/**
+	 * 位置管理对象
+	 */
+	private MKLocationManager mLocationManager;
+
+	/**
+	 * 地图View
+	 */
+	private MapView mapView;
+
+	/**
+	 * 弹出PopView对象
+	 */
+	private View popupView;
+
+	/**
+	 * 地图控制对象
+	 */
+	private MapController mapController;
+
+	/**
+	 * 地图搜索对象
+	 */
+	private MKSearch mkSearch;
+
+	/**
+	 * 当前位置对象
+	 */
+	private GeoPoint locationGeoPoint;
+
+	/**
+	 * 我的位置覆盖物
+	 */
+	private MyLocationOverlay myLocationOverlay;
+
+	/**
+	 * 定位按钮
+	 */
+	private ImageButton mylocBtn;
+
+	/**
+	 * 放大地图比例
+	 */
+	private ImageButton zoomUpBtn;
+
+	/**
+	 * 缩放地图比例
+	 */
+	private ImageButton zoomDownBtn;
+
+	/**
+	 * 截屏按钮
+	 */
+	private ImageButton screenshotBtn;
+
+	/** Called when the activity is first created. */
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.mapactivity);
+		findView();
+		initMap();
+	}
+
+	/**
+	 * 初始化控件<BR>
+	 * [功能详细描述]
+	 */
+	public void findView() {
+		mapView = (MapView) findViewById(R.id.mapView);
+
+		mylocBtn = (ImageButton) findViewById(R.id.ImageButtonMyloc);
+		zoomUpBtn = (ImageButton) findViewById(R.id.ImageButtonZoomUp);
+		zoomDownBtn = (ImageButton) findViewById(R.id.ImageButtonZoomDown);
+		screenshotBtn = (ImageButton) findViewById(R.id.ImageButtonAR);
+
+		mylocBtn.setOnClickListener(this);
+		zoomUpBtn.setOnClickListener(this);
+		zoomDownBtn.setOnClickListener(this);
+		screenshotBtn.setOnClickListener(this);
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @return
+	 * @see com.baidu.mapapi.MapActivity#isRouteDisplayed()
+	 */
+	@Override
+	protected boolean isRouteDisplayed() {
+		return false;
+	}
+
+	/**
+	 * 初始化百度地图组件<BR>
+	 * [功能详细描述]
+	 */
+	public void initMap() {
+		MyApplication myApplication = (MyApplication) this.getApplication();
+		if (myApplication.mMapManager == null) {
+			myApplication.mMapManager = new BMapManager(getApplication());
+			myApplication.mMapManager.init(myApplication.mapKey,
+					new MyApplication.MyGeneralListener());
+		}
+		myApplication.mMapManager.start();
+		mLocationManager = myApplication.mMapManager.getLocationManager();
+		mkSearch = new MKSearch();
+		mkSearch.init(myApplication.mMapManager, this);
+
+		// 如果使用地图SDK，需初始化地图Activity
+		super.initMapActivity(myApplication.mMapManager);
+		mapController = mapView.getController();
+		// 我的位置图层
+		myLocationOverlay = new MeLocationOverlay(BaiduMapActivity.this,
+				mapView, popupView);
+
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param v
+	 * @see android.view.View.OnClickListener#onClick(android.view.View)
+	 */
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.ImageButtonMyloc:
+			if (locationGeoPoint == null) {
+				Toast.makeText(BaiduMapActivity.this, "正在定位中,请稍后...",
+						Toast.LENGTH_LONG).show();
+			} else {
+				mapController.animateTo(locationGeoPoint);
+				mapView.getOverlays().add(myLocationOverlay);
+			}
+			break;
+		case R.id.ImageButtonZoomUp:
+			mapController.zoomIn();
+			break;
+		case R.id.ImageButtonZoomDown:
+			mapController.zoomOut();
+			break;
+
+		case R.id.ImageButtonAR:
+			
+			
+				Builder builder = new AlertDialog.Builder(BaiduMapActivity.this);
+				builder.setTitle("发送位置");
+				builder.setMessage("将您当前位置发送给对方？");
+				builder.setPositiveButton("确定",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								dialog.dismiss();
+							}
+						});
+				builder.show();
+			
+			
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @see com.baidu.mapapi.MapActivity#onPause()
+	 */
+	@Override
+	protected void onPause() {
+		// 移除listener
+		mLocationManager.removeUpdates(this);
+		myLocationOverlay.disableMyLocation();
+		// 打开指南针
+		myLocationOverlay.disableCompass();
+		MyApplication.getContext().mMapManager.stop();
+		super.onPause();
+
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @see com.baidu.mapapi.MapActivity#onResume()
+	 */
+	@Override
+	protected void onResume() {
+		// 添加listener
+		mLocationManager.requestLocationUpdates(this);
+		myLocationOverlay.enableMyLocation();
+		// 打开指南针
+		myLocationOverlay.enableCompass();
+		MyApplication.getContext().mMapManager.start();
+		super.onResume();
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @see com.baidu.mapapi.MKSearchListener#onGetAddrResult(com.baidu.mapapi.MKAddrInfo,
+	 *      int)
+	 */
+	@Override
+	public void onGetAddrResult(MKAddrInfo addrInfo, int arg1) {
+		// if (addrInfo != null) {
+		// ((TextView)
+		// popupView.findViewById(R.id.locationAddress)).setText(addrInfo.strAddr);
+		// }
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @see com.baidu.mapapi.MKSearchListener#onGetBusDetailResult(com.baidu.mapapi.MKBusLineResult,
+	 *      int)
+	 */
+	@Override
+	public void onGetBusDetailResult(MKBusLineResult arg0, int arg1) {
+
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @see com.baidu.mapapi.MKSearchListener#onGetDrivingRouteResult(com.baidu.mapapi.MKDrivingRouteResult,
+	 *      int)
+	 */
+	@Override
+	public void onGetDrivingRouteResult(MKDrivingRouteResult arg0, int arg1) {
+
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @param arg2
+	 * @see com.baidu.mapapi.MKSearchListener#onGetPoiResult(com.baidu.mapapi.MKPoiResult,
+	 *      int, int)
+	 */
+	@Override
+	public void onGetPoiResult(MKPoiResult arg0, int arg1, int arg2) {
+
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @see com.baidu.mapapi.MKSearchListener#onGetTransitRouteResult(com.baidu.mapapi.MKTransitRouteResult,
+	 *      int)
+	 */
+	@Override
+	public void onGetTransitRouteResult(MKTransitRouteResult res, int error) {
+		if (error != 0 || res == null) {
+			Toast.makeText(BaiduMapActivity.this, "抱歉，未找到结果",
+					Toast.LENGTH_SHORT).show();
+			return;
+		}
+		TransitOverlay routeOverlay = new TransitOverlay(BaiduMapActivity.this,
+				mapView);
+		// 此处仅展示一个方案作为示例
+		routeOverlay.setData(res.getPlan(0));
+		mapView.getOverlays().clear();
+		mapView.getOverlays().add(routeOverlay);
+		mapView.invalidate();
+
+		mapView.getController().animateTo(res.getStart().pt);
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @param arg1
+	 * @see com.baidu.mapapi.MKSearchListener#onGetWalkingRouteResult(com.baidu.mapapi.MKWalkingRouteResult,
+	 *      int)
+	 */
+	@Override
+	public void onGetWalkingRouteResult(MKWalkingRouteResult arg0, int arg1) {
+
+	}
+
+	/**
+	 * 离线地图回调事件<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param type
+	 *            事件类型: MKOfflineMap.TYPE_NEW_OFFLINE,
+	 *            MKOfflineMap.TYPE_DOWNLOAD_UPDATE 等
+	 * @param state
+	 *            事件状态: 当type为TYPE_NEW_OFFLINE时，表示新安装的离线地图数目.
+	 *            当type为TYPE_DOWNLOAD_UPDATE时，表示更新的城市ID.
+	 * @see com.baidu.mapapi.MKOfflineMapListener#onGetOfflineMapState(int, int)
+	 */
+	@Override
+	public void onGetOfflineMapState(int type, int state) {
+
+	}
+
+	/**
+	 * [一句话功能简述]<BR>
+	 * [功能详细描述]
+	 * 
+	 * @param arg0
+	 * @see com.baidu.mapapi.LocationListener#onLocationChanged(android.location.Location)
+	 */
+	@Override
+	public void onLocationChanged(Location location) {
+		if (location != null) {
+			String strLog = String.format(
+					"您当前的位置:\r\n" + "纬度:%f\r\n" + "经度:%f",
+					location.getLongitude(), location.getLatitude());
+			System.out.println("=============" + strLog);
+			if (locationGeoPoint == null) {
+				locationGeoPoint = new GeoPoint(
+						(int) (location.getLatitude() * 1e6),
+						(int) (location.getLongitude() * 1e6));
+			} else {
+				locationGeoPoint
+						.setLatitudeE6((int) (location.getLatitude() * 1e6));
+				locationGeoPoint
+						.setLongitudeE6((int) (location.getLongitude() * 1e6));
+			}
+		}
+	}
+
+}
